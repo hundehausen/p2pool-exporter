@@ -1,0 +1,19 @@
+{
+  "name": "p2pool-exporter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "type": "module",
+  "author": "hundehausen",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "node-fetch": "^3.2.3",
+    "prom-client": "^14.0.1"
+  }
+}
