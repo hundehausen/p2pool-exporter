@@ -38,21 +38,22 @@ const main = async () => {
 
   app.get("/metrics", async (req, res) => {
     const url = `${BASE_URL}/api/miner_info/${ADDRESS}`;
-    const response = await fetch(url);
-    const json = await response.json();
-    if (json.error) {
+    try {
+      const response = await fetch(url);
+      const json = await response.json();
+      const lastShareHeight = json.last_share_height;
+      const lastShareTime = json.last_share_timestamp;
+      const blocks = json.shares.blocks;
+      const uncles = json.shares.uncles;
+      lastShareHeightGauge.set(lastShareHeight);
+      lastShareTimeGauge.set(lastShareTime);
+      blocksGauge.set(blocks);
+      unclesGauge.set(uncles);
+      res.set("Content-Type", promClient.register.contentType);
+      res.end(await promClient.register.metrics());
+    } catch (error) {
       res.status(500).send(json.error);
     }
-    const lastShareHeight = json.last_share_height;
-    const lastShareTime = json.last_share_timestamp;
-    const blocks = json.shares.blocks;
-    const uncles = json.shares.uncles;
-    lastShareHeightGauge.set(lastShareHeight);
-    lastShareTimeGauge.set(lastShareTime);
-    blocksGauge.set(blocks);
-    unclesGauge.set(uncles);
-    res.set("Content-Type", promClient.register.contentType);
-    res.end(await promClient.register.metrics());
   });
 };
 
