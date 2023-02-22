@@ -1,7 +1,7 @@
-import express from "express";
+import express, { Express, Request, Response } from "express";
 import * as promClient from "prom-client";
-import fetch from "node-fetch";
 import "dotenv/config";
+import axios from "axios";
 
 const PORT = process.env.PORT || 6543;
 const BASE_URL = process.env.BASE_URL || "https://p2pool.observer";
@@ -9,7 +9,7 @@ const ADDRESS = process.env.ADDRESS || "";
 
 const Gauge = promClient.Gauge;
 
-const app = express();
+const app: Express = express();
 
 const lastShareHeightGauge = new Gauge({
   name: "last_share_height",
@@ -31,20 +31,29 @@ const unclesGauge = new Gauge({
   help: "Number of uncles",
 });
 
+type JsonResponse = {
+  last_share_height: number;
+  last_share_timestamp: number;
+  shares: {
+    blocks: number;
+    uncles: number;
+  };
+};
+
 const main = async () => {
-  app.get("/", (req, res) => {
-    res.send("look for /metrics");
+  app.get("/", (req: Request, res: Response) => {
+    res.send("serving at /metrics");
   });
 
-  app.get("/metrics", async (req, res) => {
+  app.get("/metrics", async (req: Request, res: Response) => {
     const url = `${BASE_URL}/api/miner_info/${ADDRESS}`;
     try {
-      const response = await fetch(url);
-      const json = await response.json();
-      const lastShareHeight = json.last_share_height;
-      const lastShareTime = json.last_share_timestamp;
-      const blocks = json.shares.blocks;
-      const uncles = json.shares.uncles;
+      const response = await axios.get(url);
+      const p2poolInfo = response.data;
+      const lastShareHeight = p2poolInfo.last_share_height;
+      const lastShareTime = p2poolInfo.last_share_timestamp;
+      const blocks = p2poolInfo.shares.blocks;
+      const uncles = p2poolInfo.shares.uncles;
       lastShareHeightGauge.set(lastShareHeight);
       lastShareTimeGauge.set(lastShareTime);
       blocksGauge.set(blocks);
@@ -52,7 +61,7 @@ const main = async () => {
       res.set("Content-Type", promClient.register.contentType);
       res.end(await promClient.register.metrics());
     } catch (error) {
-      res.status(500).send(json.error);
+      res.status(500).send(error);
     }
   });
 };
