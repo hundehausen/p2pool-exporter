@@ -50,7 +50,7 @@ app.get("/metrics", async (req, res) => {
     res.set("Content-Type", promClient.register.contentType);
     res.end(await promClient.register.metrics());
   } catch (error) {
-    res.status(500).send(json.error);
+    res.status(500).send(error);
   }
 });
 
