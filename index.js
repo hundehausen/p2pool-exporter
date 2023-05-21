@@ -41,8 +41,8 @@ app.get("/metrics", async (req, res) => {
     const json = await response.json();
     const lastShareHeight = json.last_share_height;
     const lastShareTime = json.last_share_timestamp;
-    const blocks = json.shares.blocks;
-    const uncles = json.shares.uncles;
+    const blocks = json.shares.map((share) => share.shares).reduce((a, b) => a + b, 0);
+    const uncles = json.shares.map((share) => share.uncles).reduce((a, b) => a + b, 0);
     lastShareHeightGauge.set(lastShareHeight);
     lastShareTimeGauge.set(lastShareTime);
     blocksGauge.set(blocks);
