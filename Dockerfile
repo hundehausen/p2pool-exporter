@@ -1,19 +1,27 @@
-FROM node:alpine as build-env
+# Step 1: Build the application
+FROM oven/bun AS builder
 
-ADD package.json /app/package.json
-ADD package-lock.json /app/package-lock.json
-ADD index.js /app/index.js
+# Set the working directory in the container
 WORKDIR /app
 
-RUN npm ci --only=production
+# Copy all the application files to the container
+COPY . .
 
-FROM node:alpine
-COPY --from=build-env /app /app
-WORKDIR /app
+# Run your build process
+RUN bun i
+RUN bun build src/index.ts --compile --outfile server
 
+# Step 2: Create a smaller image for running the application
+FROM oven/bun
+
+# Copy only the necessary files from the builder image to the final image
+COPY --from=builder /app/server .
+
+# Expose the port the application will run on
 EXPOSE 6543/tcp
 ENV PORT=6543
 ENV BASE_URL=https://p2pool.observer
 ENV ADDRESS=
 
-CMD [ "index.js" ]
+#Start the BUN server
+CMD ["./server"]
